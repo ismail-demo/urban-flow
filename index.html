@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Targo — Mumbai Transit Predictor</title>
+
+  <!-- Google Fonts: Quantico -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:        #15BCDF;
+      --accent-hover:  #3fd0ef;
+      --accent-border: #0fa3c2;
+      --bg:            #F2F1F0;
+      --bg2:           #F7F6F8;
+      --heading:       #2b3033;
+      --nav-link:      #3a3a3a;
+      --body-gray:     #6b6f72;
+      --dark:          #1a1c1e;
+      --font:          'Quantico', 'Arial Narrow', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: var(--font);
+      color: var(--heading);
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3 {
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+      line-height: 0.98;
+      color: var(--heading);
+    }
+
+    a {
+      color: var(--nav-link);
+      text-decoration: none;
+    }
+    a:hover { color: #000; }
+
+    /* ─── Chamfered Button Base ────────────────────────────── */
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      border: 1px solid var(--accent-border);
+      color: var(--dark);
+      text-transform: uppercase;
+      font-family: var(--font);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      padding: 18px 34px;
+      font-size: clamp(13px, 2.2vw, 16px);
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+      box-shadow: 0 0 0 1px rgba(21,188,223,0.35), 0 10px 30px -12px rgba(15,163,194,0.6);
+      transition: background 0.2s, box-shadow 0.2s;
+      position: relative;
+      white-space: nowrap;
+    }
+    .btn-cta::after {
+      content: '';
+      display: inline-block;
+      width: 22px;
+      height: 1px;
+      background: var(--dark);
+      flex-shrink: 0;
+    }
+    .btn-cta:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 0 2px rgba(21,188,223,0.5), 0 14px 36px -10px rgba(15,163,194,0.75);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SECTION 1 — HERO
+    ══════════════════════════════════════════════════════════ */
+    #hero {
+      position: relative;
+      min-height: 100svh;
+      background: var(--bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Background video */
+    #hero-video {
+      position: absolute;
+      top: 0;
+      right: -20%;
+      width: 99%;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Desktop scrim */
+    #hero-scrim {
+      position: absolute;
+      top: 0; left: 0;
+      width: 70%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        #F2F1F0 0%,
+        #F2F1F0 55%,
+        rgba(242,241,240,0.85) 78%,
+        rgba(242,241,240,0) 100%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Navbar */
+    #navbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: clamp(20px, 5vw, 56px);
+      padding: clamp(20px, 3vw, 38px) clamp(20px, 4vw, 48px) 0;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-circle {
+      width: 38px;
+      height: 38px;
+      background: #111;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-logo-circle svg {
+      display: block;
+    }
+    .nav-logo-name {
+      font-size: clamp(22px, 5vw, 30px);
+      font-weight: 400;
+      color: #111;
+      letter-spacing: -0.5px;
+      font-family: var(--font);
+      text-transform: lowercase;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 34px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-weight: 700;
+      font-size: clamp(12px, 2.4vw, 15px);
+      letter-spacing: 0.06em;
+      color: var(--nav-link);
+      white-space: nowrap;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #000; }
+
+    .nav-spacer { flex: 1; }
+
+    /* Contact button (desktop) */
+    .btn-contact {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      text-transform: uppercase;
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: clamp(12px, 2vw, 14px);
+      letter-spacing: 0.14em;
+      padding: 14px 26px;
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-contact:hover { background: rgba(255,255,255,0.14); }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      margin-left: auto;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #fff;
+      border-radius: 1px;
+    }
+
+    /* Mobile nav menu */
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      padding: 18px clamp(20px, 4vw, 48px);
+      position: relative;
+      z-index: 10;
+    }
+    .mobile-menu a {
+      font-weight: 700;
+      font-size: 15px;
+      color: #1a1c1e;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .mobile-menu.open { display: flex; }
+
+    /* Headline h1 */
+    #hero h1 {
+      position: relative;
+      z-index: 2;
+      font-size: min(clamp(34px, 7.6vw, 80px), 9.2vh);
+      font-weight: 700;
+      padding: min(clamp(40px,9vw,120px), 9vh) 20px min(clamp(24px,4vw,44px), 5vh) clamp(20px, 9vw, 118px);
+    }
+    #hero h1 .indent {
+      display: block;
+      padding-left: min(238px, 28vw);
+    }
+    #hero h1 .accent { color: var(--accent); }
+
+    /* CTA area */
+    .hero-cta {
+      position: relative;
+      z-index: 2;
+      padding-left: calc(clamp(20px, 9vw, 118px) + min(238px, 28vw));
+      padding-bottom: min(clamp(36px, 6vw, 80px), 7vh);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SECTION 2 — ABOUT
+    ══════════════════════════════════════════════════════════ */
+    #about {
+      background: linear-gradient(180deg, #F2F1F0 0%, #F7F6F8 18%, #F7F6F8 100%);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 40px;
+      padding: clamp(60px,10vw,140px) 0 clamp(30px,5vw,70px) clamp(20px,9vw,118px);
+    }
+
+    .about-left {
+      flex: 1 1 420px;
+      min-width: 300px;
+    }
+    .about-left h2 {
+      font-size: clamp(34px, 6.5vw, 72px);
+      font-weight: 700;
+    }
+    .about-left h2 .indent {
+      display: block;
+      padding-left: min(160px, 18vw);
+      color: var(--accent);
+    }
+    .about-left p {
+      max-width: 520px;
+      margin: 32px 0 0 min(160px, 18vw);
+      font-size: clamp(14px, 1.6vw, 17px);
+      line-height: 1.7;
+      color: var(--body-gray);
+    }
+    .about-cta {
+      margin: 36px 0 0 min(160px, 18vw);
+    }
+
+    .about-right {
+      flex: 1 1 360px;
+      min-width: 280px;
+      display: flex;
+      justify-content: flex-end;
+      position: relative;
+    }
+    #about-video {
+      width: 100%;
+      max-width: 644px;
+      height: auto;
+      display: block;
+    }
+    .about-video-overlay {
+      position: absolute;
+      top: 0; right: 0;
+      width: 100%;
+      max-width: 644px;
+      height: 100%;
+      background: var(--accent);
+      mix-blend-mode: hue;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SECTION 3 — TRANSIT PREDICTOR
+    ══════════════════════════════════════════════════════════ */
+    #transit {
+      background: var(--bg2);
+      padding: clamp(60px,9vw,120px) clamp(20px,9vw,118px);
+    }
+
+    .transit-header {
+      margin-bottom: 56px;
+    }
+    .transit-header .label {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--dark);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      margin-bottom: 18px;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .transit-header h2 {
+      font-size: clamp(28px, 5.5vw, 60px);
+      font-weight: 700;
+      color: var(--heading);
+      line-height: 1;
+    }
+    .transit-header h2 span { color: var(--accent); }
+    .transit-header p {
+      margin-top: 18px;
+      font-size: clamp(14px, 1.6vw, 17px);
+      color: var(--body-gray);
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* Form card */
+    .predictor-card {
+      background: #fff;
+      border: 1px solid rgba(21,188,223,0.15);
+      box-shadow: 0 4px 40px -8px rgba(21,188,223,0.12), 0 2px 12px rgba(0,0,0,0.06);
+      padding: clamp(28px,4vw,52px);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      max-width: 900px;
+      margin-bottom: 40px;
+    }
+    .predictor-card h3 {
+      font-size: clamp(15px, 2.2vw, 20px);
+      font-weight: 700;
+      color: var(--heading);
+      letter-spacing: 0.04em;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .predictor-card h3 .dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Form grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 22px 28px;
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--body-gray);
+    }
+    .form-group select {
+      font-family: var(--font);
+      font-size: clamp(13px, 1.5vw, 15px);
+      font-weight: 400;
+      color: var(--dark);
+      background: var(--bg);
+      border: 1.5px solid #ddd;
+      padding: 12px 14px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2315BCDF' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      outline: none;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    }
+    .form-group select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(21,188,223,0.12);
+    }
+    .form-group select:hover { border-color: var(--accent-hover); }
+
+    /* Submit button row */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .btn-predict {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      border: 1px solid var(--accent-border);
+      color: var(--dark);
+      text-transform: uppercase;
+      font-family: var(--font);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      padding: 16px 34px;
+      font-size: clamp(13px, 1.8vw, 15px);
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      box-shadow: 0 0 0 1px rgba(21,188,223,0.35), 0 8px 24px -10px rgba(15,163,194,0.6);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-predict svg { flex-shrink: 0; }
+    .btn-predict:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 0 2px rgba(21,188,223,0.5), 0 12px 30px -8px rgba(15,163,194,0.75);
+    }
+    .btn-predict:active { transform: scale(0.98); }
+
+    .form-note {
+      font-size: 12px;
+      color: var(--body-gray);
+      letter-spacing: 0.03em;
+    }
+    .form-note span {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+      margin-right: 6px;
+      vertical-align: middle;
+      transition: background 0.3s;
+    }
+    .form-note span.live { background: #4caf50; animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ─── Result Cards ───────────────────────────────────────── */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+    }
+
+    .result-card {
+      background: #fff;
+      border: 1.5px solid rgba(21,188,223,0.18);
+      padding: 32px 28px;
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+      box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .result-card.has-result {
+      border-color: rgba(21,188,223,0.55);
+      box-shadow: 0 4px 30px -6px rgba(21,188,223,0.2);
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .result-card.has-result::before { opacity: 1; }
+
+    .result-card .card-icon {
+      width: 42px; height: 42px;
+      background: rgba(21,188,223,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .result-card .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--body-gray);
+      margin-bottom: 10px;
+    }
+    .result-card .card-value {
+      font-size: clamp(36px, 5vw, 52px);
+      font-weight: 700;
+      color: var(--heading);
+      line-height: 1;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+    }
+    .result-card .card-value.empty {
+      font-size: 28px;
+      color: #ccc;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+    .result-card .card-unit {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--body-gray);
+      margin-left: 6px;
+      align-self: flex-end;
+      padding-bottom: 4px;
+    }
+    .result-card .card-sub {
+      font-size: 12px;
+      color: var(--body-gray);
+      margin-top: 10px;
+      line-height: 1.5;
+      min-height: 36px;
+    }
+    .result-card .card-bar {
+      margin-top: 16px;
+      height: 6px;
+      background: #eee;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .result-card .card-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Loading shimmer */
+    .shimmer {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
+      background-size: 400% 100%;
+      animation: shimmer 1.2s ease infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ─── Mobile Styles ──────────────────────────────────────── */
+    @media (max-width: 700px) {
+      #hero-video {
+        top: 0;
+        right: auto;
+        left: -12%;
+        width: 119%;
+      }
+      #hero-scrim { display: none; }
+      .nav-links, .btn-contact { display: none; }
+      .hamburger { display: flex; }
+
+      #hero h1 {
+        margin-top: 360px;
+        padding: 0 20px 28px 20px;
+        font-size: clamp(34px, 10vw, 56px);
+      }
+      #hero h1 .indent { padding-left: min(238px, 28vw); }
+      .hero-cta {
+        padding-left: calc(20px + min(238px, 28vw));
+      }
+
+      .about-left p,
+      .about-cta {
+        margin-left: 0;
+      }
+      .about-left h2 .indent { padding-left: 0; }
+
+      #transit { padding: 48px 20px; }
+
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Utility ─────────────────────────────────────────────── */
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 1 — HERO
+══════════════════════════════════════════════════════ -->
+<section id="hero" aria-label="Hero">
+
+  <!-- Background video -->
+  <video
+    id="hero-video"
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_050407_500d0339-ab28-41c1-9688-132a74a3b5aa.mp4"
+    autoplay muted loop playsinline preload="auto"
+    aria-hidden="true"
+    tabindex="-1"
+  ></video>
+
+  <!-- Desktop scrim -->
+  <div id="hero-scrim" aria-hidden="true"></div>
+
+  <!-- Navbar -->
+  <nav id="navbar" aria-label="Main navigation">
+    <!-- Logo -->
+    <a href="#" class="nav-logo" aria-label="Targo home">
+      <div class="nav-logo-circle" aria-hidden="true">
+        <!-- White ellipse rotated -25° -->
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="19" cy="19" rx="10" ry="4"
+            fill="white"
+            transform="rotate(-25 19 19)" />
+        </svg>
+      </div>
+      <span class="nav-logo-name">targo</span>
+    </a>
+
+    <!-- Nav links (desktop) -->
+    <ul class="nav-links" role="list">
+      <li><a href="#about">About</a></li>
+    </ul>
+
+    <div class="nav-spacer" aria-hidden="true"></div>
+
+    <!-- Hamburger (mobile) -->
+    <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="#about">About</a>
+  </div>
+
+  <!-- Headline -->
+  <h1 aria-label="Optimizing urban flow for Mumbai transit.">
+    Optimizing<br>
+    Urban<br>
+    Flow<br>
+    <span class="indent">For</span>
+    <span class="indent">Mumbai</span>
+    <span class="indent accent">Transit</span>
+  </h1>
+
+  <!-- CTA -->
+  <div class="hero-cta">
+    <button class="btn-cta" onclick="document.getElementById('transit').scrollIntoView({behavior:'smooth'})">
+      Get Started
+    </button>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 2 — ABOUT
+══════════════════════════════════════════════════════ -->
+<section id="about" aria-label="About Targo">
+
+  <!-- Left column -->
+  <div class="about-left">
+    <h2 aria-label="About Targo">
+      About<br>
+      <span class="indent">Targo</span>
+    </h2>
+    <p>
+      Targo utilizes predictive modeling to forecast delays and crowding levels across the Mumbai public transit network. The system leverages Multiple Linear Regression and Ensemble Learning to optimize urban flow and provide real-time journey intelligence.
+    </p>
+    <div class="about-cta">
+      <button class="btn-cta">Learn More</button>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div class="about-right">
+    <video
+      id="about-video"
+      src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_063501_2e2c8971-de1e-473a-8611-a0c9ae7ee186.mp4"
+      autoplay muted loop playsinline preload="auto"
+      aria-hidden="true"
+      tabindex="-1"
+    ></video>
+    <div class="about-video-overlay" aria-hidden="true"></div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 3 — MUMBAI TRANSIT PREDICTOR
+══════════════════════════════════════════════════════ -->
+<section id="transit" aria-label="Mumbai Transit Predictor">
+
+  <div class="transit-header">
+    <div class="label">Live Intelligence</div>
+    <h2>MUMBAI TRANSIT<br><span>PREDICTOR</span></h2>
+    <p>
+      Select your journey parameters below and let our model forecast
+      delays and crowding conditions in real time across the Mumbai rail network.
+    </p>
+  </div>
+
+  <!-- ── Predictor Form Card ── -->
+  <div class="predictor-card" role="form" aria-label="Transit prediction form">
+    <h3>
+      <span class="dot" aria-hidden="true"></span>
+      Journey Parameters
+    </h3>
+
+    <div class="form-grid" id="predict-form">
+
+      <!-- Time of Day -->
+      <div class="form-group">
+        <label for="time-of-day">Time of Day</label>
+        <select id="time-of-day" name="time_of_day" aria-required="true">
+          <option value="" disabled selected>Select time slot</option>
+          <option value="early_morning">Early Morning (05:00 – 07:00)</option>
+          <option value="morning_peak">Morning Peak (07:00 – 10:00)</option>
+          <option value="mid_morning">Mid Morning (10:00 – 12:00)</option>
+          <option value="afternoon">Afternoon (12:00 – 16:00)</option>
+          <option value="evening_peak">Evening Peak (16:00 – 20:00)</option>
+          <option value="night">Night (20:00 – 23:00)</option>
+          <option value="late_night">Late Night (23:00 – 05:00)</option>
+        </select>
+      </div>
+
+      <!-- Day of Week -->
+      <div class="form-group">
+        <label for="day-of-week">Day of the Week</label>
+        <select id="day-of-week" name="day_of_week" aria-required="true">
+          <option value="" disabled selected>Select day</option>
+          <option value="monday">Monday</option>
+          <option value="tuesday">Tuesday</option>
+          <option value="wednesday">Wednesday</option>
+          <option value="thursday">Thursday</option>
+          <option value="friday">Friday</option>
+          <option value="saturday">Saturday</option>
+          <option value="sunday">Sunday</option>
+        </select>
+      </div>
+
+      <!-- Mumbai Transit Line -->
+      <div class="form-group">
+        <label for="transit-line">Mumbai Transit Line</label>
+        <select id="transit-line" name="transit_line" aria-required="true">
+          <option value="" disabled selected>Select line</option>
+          <option value="western">🔵 Western Line (Churchgate ↔ Dahanu Road)</option>
+          <option value="central">🟠 Central Line (CSMT ↔ Kasara / Khopoli)</option>
+          <option value="harbour">🟢 Harbour Line (CSMT ↔ Panvel)</option>
+        </select>
+      </div>
+
+      <!-- Weather Condition -->
+      <div class="form-group">
+        <label for="weather">Weather Condition</label>
+        <select id="weather" name="weather" aria-required="true">
+          <option value="" disabled selected>Select weather</option>
+          <option value="clear">☀️ Clear</option>
+          <option value="light_rain">🌦️ Light Rain</option>
+          <option value="heavy_monsoon">⛈️ Heavy Monsoon</option>
+        </select>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div class="form-actions">
+      <button class="btn-predict" id="predict-btn" type="button" aria-controls="result-delay result-crowd">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="8" cy="8" r="7" stroke="#1a1c1e" stroke-width="1.5"/>
+          <path d="M8 4.5V8.5L10.5 10" stroke="#1a1c1e" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Predict Status
+      </button>
+      <p class="form-note" aria-live="polite" id="status-note">
+        <span id="status-dot"></span>
+        <span id="status-text">Configure parameters above and click Predict Status.</span>
+      </p>
+    </div>
+  </div><!-- /predictor-card -->
+
+  <!-- ── Result Cards ── -->
+  <div class="result-grid" role="region" aria-label="Prediction results" aria-live="polite">
+
+    <!-- Card 1: Predicted Delay -->
+    <div class="result-card" id="result-delay" tabindex="-1">
+      <div class="card-icon" aria-hidden="true">
+        <!-- Clock icon -->
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="9.5" stroke="#15BCDF" stroke-width="1.5"/>
+          <path d="M11 6V11.5L14 13.5" stroke="#15BCDF" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="card-label">Predicted Delay</div>
+      <div class="card-value empty" id="delay-value" aria-label="Predicted delay result">
+        —
+      </div>
+      <div class="card-sub" id="delay-sub">Run a prediction to see estimated delay.</div>
+      <div class="card-bar" aria-hidden="true">
+        <div class="card-bar-fill" id="delay-bar"></div>
+      </div>
+    </div>
+
+    <!-- Card 2: Crowding Level -->
+    <div class="result-card" id="result-crowd" tabindex="-1">
+      <div class="card-icon" aria-hidden="true">
+        <!-- People icon -->
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8" cy="7" r="3" stroke="#15BCDF" stroke-width="1.5"/>
+          <path d="M2 18c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="#15BCDF" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="16" cy="7" r="2.5" stroke="#15BCDF" stroke-width="1.3"/>
+          <path d="M19 18c0-2.76-1.34-5-3.5-5.5" stroke="#15BCDF" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="card-label">Crowding Level</div>
+      <div class="card-value empty" id="crowd-value" aria-label="Crowding level result">
+        —
+      </div>
+      <div class="card-sub" id="crowd-sub">Run a prediction to see crowding forecast.</div>
+      <div class="card-bar" aria-hidden="true">
+        <div class="card-bar-fill" id="crowd-bar" style="background: linear-gradient(90deg, #15BCDF, #ff9800);"></div>
+      </div>
+    </div>
+
+  </div><!-- /result-grid -->
+
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════ -->
+<script>
+  /* ─── Mobile Menu Toggle ─────────────────────────────── */
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  hamburger.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', isOpen);
+  });
+
+  // Close menu when a mobile link is clicked
+  mobileMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* ─── Video Autoplay Robustness ──────────────────────── */
+  function robustPlay(video) {
+    if (!video) return;
+    video.muted = true;
+
+    const attemptPlay = () => {
+      video.muted = true;
+      video.play().catch(() => {});
+    };
+
+    attemptPlay();
+
+    // Retry every 1 second until playing
+    const retryId = setInterval(() => {
+      if (!video.paused) { clearInterval(retryId); return; }
+      attemptPlay();
+    }, 1000);
+
+    // Also trigger on first user gesture
+    const userGesturePlay = () => {
+      attemptPlay();
+      document.removeEventListener('click', userGesturePlay);
+      document.removeEventListener('touchstart', userGesturePlay);
+    };
+    document.addEventListener('click', userGesturePlay, { once: true });
+    document.addEventListener('touchstart', userGesturePlay, { once: true });
+  }
+
+  robustPlay(document.getElementById('hero-video'));
+  robustPlay(document.getElementById('about-video'));
+
+  /* ─── Transit Predictor Mock Logic ───────────────────── */
+  /**
+   * MOCK DATA TABLE
+   * In production, replace this function with a fetch() call to your backend API:
+   *
+   *   const res = await fetch('/api/predict', {
+   *     method: 'POST',
+   *     headers: { 'Content-Type': 'application/json' },
+   *     body: JSON.stringify({ time_of_day, day_of_week, transit_line, weather })
+   *   });
+   *   const data = await res.json();
+   *   // data.delay_minutes, data.crowding_level, data.crowding_pct
+   */
+  function getMockPrediction(params) {
+    const { time_of_day, day_of_week, transit_line, weather } = params;
+
+    // Base delays per line (minutes)
+    const baseDelay = { western: 4, central: 5, harbour: 3 };
+
+    // Time-of-day multipliers
+    const timeMult = {
+      early_morning: 0.6, morning_peak: 2.2, mid_morning: 1.1,
+      afternoon: 0.9, evening_peak: 2.4, night: 0.7, late_night: 0.4
+    };
+
+    // Day multipliers
+    const dayMult = {
+      monday: 1.3, tuesday: 1.2, wednesday: 1.2, thursday: 1.2,
+      friday: 1.4, saturday: 0.8, sunday: 0.6
+    };
+
+    // Weather adders (extra minutes)
+    const weatherAdd = { clear: 0, light_rain: 3, heavy_monsoon: 12 };
+
+    // Crowding labels and percentages
+    const crowdingMatrix = {
+      morning_peak:  { weekday: ['Extreme', 98], weekend: ['High',   72] },
+      evening_peak:  { weekday: ['Extreme', 96], weekend: ['High',   70] },
+      early_morning: { weekday: ['Low',     28], weekend: ['Minimal',14] },
+      mid_morning:   { weekday: ['Moderate',55], weekend: ['Low',    30] },
+      afternoon:     { weekday: ['Moderate',50], weekend: ['Low',    35] },
+      night:         { weekday: ['Low',     32], weekend: ['Low',    26] },
+      late_night:    { weekday: ['Minimal', 12], weekend: ['Minimal', 9] },
+    };
+
+    const isWeekend = ['saturday','sunday'].includes(day_of_week);
+    const crowdType = isWeekend ? 'weekend' : 'weekday';
+
+    const raw = (baseDelay[transit_line] || 4)
+      * (timeMult[time_of_day] || 1)
+      * (dayMult[day_of_week] || 1)
+      + (weatherAdd[weather] || 0);
+
+    // Weather boosts crowding on monsoon
+    let [crowdLabel, crowdPct] = (crowdingMatrix[time_of_day] || crowdingMatrix.afternoon)[crowdType];
+    if (weather === 'heavy_monsoon') { crowdPct = Math.min(crowdPct + 18, 100); crowdLabel = 'Extreme'; }
+    else if (weather === 'light_rain') { crowdPct = Math.min(crowdPct + 8, 100); }
+
+    // Clamp delay 0–60 min
+    const delay = Math.round(Math.min(Math.max(raw, 0), 60));
+    const delayBarPct = Math.round((delay / 60) * 100);
+
+    // Sub-labels
+    const delayVerdict = delay <= 2 ? 'On time — no disruption expected.'
+      : delay <= 7 ? 'Minor delay — trains running slightly behind schedule.'
+      : delay <= 15 ? 'Moderate delay — plan extra buffer time.'
+      : 'Significant delay — consider alternate routes or timing.';
+
+    const crowdVerdict = crowdPct < 30 ? 'Plenty of space — comfortable journey likely.'
+      : crowdPct < 60 ? 'Moderate occupancy — seating available.'
+      : crowdPct < 85 ? 'Crowded — standing room, some discomfort.'
+      : 'Extremely crowded — expect difficulty boarding.';
+
+    return {
+      delay_minutes: delay,
+      delay_bar_pct: delayBarPct,
+      delay_verdict: delayVerdict,
+      crowding_label: crowdLabel,
+      crowding_pct: crowdPct,
+      crowd_verdict: crowdVerdict,
+    };
+  }
+
+  /* ─── Render results ─────────────────────────────────── */
+  const delayCard  = document.getElementById('result-delay');
+  const crowdCard  = document.getElementById('result-crowd');
+  const delayVal   = document.getElementById('delay-value');
+  const crowdVal   = document.getElementById('crowd-value');
+  const delaySub   = document.getElementById('delay-sub');
+  const crowdSub   = document.getElementById('crowd-sub');
+  const delayBar   = document.getElementById('delay-bar');
+  const crowdBar   = document.getElementById('crowd-bar');
+  const statusDot  = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+
+  function showLoading() {
+    [delayCard, crowdCard].forEach(c => c.classList.remove('has-result'));
+    delayVal.className = 'card-value';
+    crowdVal.className = 'card-value';
+    delayVal.innerHTML = '<span class="shimmer" style="width:80px;height:44px;display:block;border-radius:4px"></span>';
+    crowdVal.innerHTML = '<span class="shimmer" style="width:120px;height:44px;display:block;border-radius:4px"></span>';
+    delaySub.innerHTML = '<span class="shimmer" style="width:90%;height:14px;display:block;border-radius:3px;margin-top:4px"></span>';
+    crowdSub.innerHTML = '<span class="shimmer" style="width:85%;height:14px;display:block;border-radius:3px;margin-top:4px"></span>';
+    delayBar.style.width = '0%';
+    crowdBar.style.width = '0%';
+    statusDot.className = 'live';
+    statusText.textContent = 'Running prediction…';
+  }
+
+  function showResults(data) {
+    // Delay card
+    delayVal.className = 'card-value';
+    delayVal.innerHTML = `${data.delay_minutes}<span class="card-unit">min</span>`;
+    delaySub.textContent = data.delay_verdict;
+    // Animate bar after brief delay
+    setTimeout(() => { delayBar.style.width = data.delay_bar_pct + '%'; }, 80);
+
+    // Choose bar color by severity
+    const delayColor = data.delay_minutes <= 2 ? '#4caf50'
+      : data.delay_minutes <= 7 ? '#8bc34a'
+      : data.delay_minutes <= 15 ? '#ff9800' : '#f44336';
+    delayBar.style.background = delayColor;
+
+    delayCard.classList.add('has-result');
+    delayVal.setAttribute('aria-label', `Predicted delay: ${data.delay_minutes} minutes`);
+
+    // Crowd card
+    crowdVal.className = 'card-value';
+    crowdVal.textContent = data.crowding_label;
+    crowdSub.textContent = `${data.crowding_pct}% occupancy — ${data.crowd_verdict}`;
+    setTimeout(() => { crowdBar.style.width = data.crowding_pct + '%'; }, 160);
+
+    crowdCard.classList.add('has-result');
+    crowdVal.setAttribute('aria-label', `Crowding level: ${data.crowding_label}`);
+
+    statusDot.className = 'live';
+    statusText.textContent = 'Prediction complete. Results shown below.';
+  }
+
+  /* ─── Button handler ─────────────────────────────────── */
+  document.getElementById('predict-btn').addEventListener('click', () => {
+    const time_of_day   = document.getElementById('time-of-day').value;
+    const day_of_week   = document.getElementById('day-of-week').value;
+    const transit_line  = document.getElementById('transit-line').value;
+    const weather       = document.getElementById('weather').value;
+
+    if (!time_of_day || !day_of_week || !transit_line || !weather) {
+      statusDot.className = '';
+      statusText.textContent = '⚠ Please fill in all four fields before predicting.';
+      // Shake animation on empty selects
+      [
+        { id: 'time-of-day',   val: time_of_day  },
+        { id: 'day-of-week',   val: day_of_week  },
+        { id: 'transit-line',  val: transit_line },
+        { id: 'weather',       val: weather      },
+      ].forEach(({ id, val }) => {
+        if (!val) {
+          const el = document.getElementById(id);
+          el.style.borderColor = '#f44336';
+          el.style.boxShadow = '0 0 0 3px rgba(244,67,54,0.15)';
+          setTimeout(() => {
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
+          }, 2000);
+        }
+      });
+      return;
+    }
+
+    showLoading();
+
+    fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ time_of_day, day_of_week, transit_line, weather })
+    })
+    .then(res => res.json())
+    .then(data => {
+      showResults(data);
+
+      // Scroll results into view on mobile
+      if (window.innerWidth <= 700) {
+        document.getElementById('result-delay').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      statusDot.className = '';
+      statusText.textContent = '⚠ Error connecting to server.';
+    });
+  });
+
+  /* ─── Clear error state on select change ─────────────── */
+  ['time-of-day','day-of-week','transit-line','weather'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      const el = document.getElementById(id);
+      el.style.borderColor = '';
+      el.style.boxShadow = '';
+    });
+  });
+</script>
+
+</body>
+</html>
